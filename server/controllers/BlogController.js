@@ -1,10 +1,14 @@
 import express from 'express'
-import ValueService from '../services/ValueService';
-import { Authorize } from '../middleware/authorize.js'
+import BlogService from '../services/BlogService';
+import { Authorize } from '../middleware/authorize.js';
+import CommentService from '../services/CommentService';
+import UserService from '../services/UserService'
 
-let _valueService = new ValueService().repository
+let _BlogService = new BlogService().repository
+let _UserService = new UserService().repository
+let _CommentService = new CommentService().repository
 
-export default class ValueController {
+export default class BlogController {
     constructor() {
         this.router = express.Router()
             //NOTE all routes after the authenticate method will require the user to be logged in to access
@@ -18,7 +22,7 @@ export default class ValueController {
 
     async getAll(req, res, next) {
         try {
-            let data = await _valueService.find({})
+            let data = await _BlogService.find({})
             return res.send(data)
         } catch (error) { next(error) }
 
@@ -26,7 +30,7 @@ export default class ValueController {
 
     async getById(req, res, next) {
         try {
-            let data = await _valueService.findById(req.params.id)
+            let data = await _BlogService.findById(req.params.id)
             if (!data) {
                 throw new Error("Invalid Id")
             }
@@ -34,18 +38,26 @@ export default class ValueController {
         } catch (error) { next(error) }
     }
 
+    async getComments(req, res, next) {
+        try {
+            let data = await _CommentService.find({ blogId: req.params.id }).populate("blogId", "body")
+            return res.send(data)
+        } catch (error) { next(error) }
+    }
+
+
     async create(req, res, next) {
         try {
             //NOTE the user id is accessable through req.body.uid, never trust the client to provide you this information
             req.body.authorId = req.session.uid
-            let data = await _valueService.create(req.body)
+            let data = await _BlogService.create(req.body)
             res.send(data)
         } catch (error) { next(error) }
     }
 
     async edit(req, res, next) {
         try {
-            let data = await _valueService.findOneAndUpdate({ _id: req.params.id, }, req.body, { new: true })
+            let data = await _BlogService.findOneAndUpdate({ _id: req.params.id, }, req.body, { new: true })
             if (data) {
                 return res.send(data)
             }
@@ -57,8 +69,8 @@ export default class ValueController {
 
     async delete(req, res, next) {
         try {
-            await _valueService.findOneAndRemove({ _id: req.params.id })
-            res.send("deleted value")
+            await _BlogService.findOneAndRemove({ _id: req.params.id })
+            res.send("deleted blog")
         } catch (error) { next(error) }
 
     }

@@ -10,9 +10,9 @@ export default class CommentController {
   constructor() {
     this.router = express.Router()
       //NOTE all routes after the authenticate method will require the user to be logged in to access
-      .use(Authorize.authenticated)
       .get('', this.getAll)
       .get('/:id', this.getById)
+      .use(Authorize.authenticated)
       .post('', this.create)
       .put('/:id', this.edit)
       .delete('/:id', this.delete)
@@ -40,7 +40,7 @@ export default class CommentController {
   async create(req, res, next) {
     try {
       //NOTE the user id is accessable through req.body.uid, never trust the client to provide you this information
-      req.body.authorId = req.session.uid
+      req.body.author = req.session.uid
       let data = await _CommentService.create(req.body)
       res.send(data)
     } catch (error) { next(error) }

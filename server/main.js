@@ -44,11 +44,11 @@ server.use('/account', new AuthController().router)
 //NOTE we have to import access to our controllers
 import BlogController from './controllers/BlogController'
 
-server.use('/api/blog', new BlogController().router)
+server.use('/api/blogs', new BlogController().router)
 
 import CommentController from './controllers/CommentController'
 
-server.use('/api/:blogId/comments', new CommentController().router)
+server.use('/api/comments', new CommentController().router)
 
 //NOTE Everything below this line always stays the same
 

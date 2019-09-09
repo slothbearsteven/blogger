@@ -14,7 +14,8 @@ export default class BlogController {
             //NOTE all routes after the authenticate method will require the user to be logged in to access
             .use(Authorize.authenticated)
             .get('', this.getAll)
-            .get('/:id', this.getById)
+            .get('/:id', this.getById, this.getComments)
+            .get('/:id/comments', this.getComments)
             .post('', this.create)
             .put('/:id', this.edit)
             .delete('/:id', this.delete)
@@ -31,6 +32,7 @@ export default class BlogController {
     async getById(req, res, next) {
         try {
             let data = await _BlogService.findById(req.params.id)
+
             if (!data) {
                 throw new Error("Invalid Id")
             }
@@ -41,15 +43,18 @@ export default class BlogController {
     async getComments(req, res, next) {
         try {
             let data = await _CommentService.find({ blogId: req.params.id }).populate("author", 'name')
+
+            if (!data) {
+                throw new Error("Comments not found")
+            }
             return res.send(data)
         } catch (error) { next(error) }
     }
 
-
     async create(req, res, next) {
         try {
             //NOTE the user id is accessable through req.body.uid, never trust the client to provide you this information
-            req.body.authorId = req.session.uid
+            req.body.author = req.session.uid
             let data = await _BlogService.create(req.body)
             res.send(data)
         } catch (error) { next(error) }
@@ -57,7 +62,7 @@ export default class BlogController {
 
     async edit(req, res, next) {
         try {
-            let data = await _BlogService.findOneAndUpdate({ _id: req.params.id, }, req.body, { new: true })
+            let data = await _BlogService.findOneAndUpdate({ _id: req.params.id, authorId: req.session.uid }, req.body, { new: true })
             if (data) {
                 return res.send(data)
             }
@@ -69,7 +74,7 @@ export default class BlogController {
 
     async delete(req, res, next) {
         try {
-            await _BlogService.findOneAndRemove({ _id: req.params.id })
+            await _BlogService.findOneAndRemove({ _id: req.params.id, authorId: req.session.uid })
             res.send("deleted blog")
         } catch (error) { next(error) }
 

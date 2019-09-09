@@ -2,10 +2,10 @@ import express from 'express'
 import BlogService from '../services/BlogService';
 import { Authorize } from '../middleware/authorize.js';
 import CommentService from '../services/CommentService';
-import UserService from '../services/UserService'
+
 
 let _BlogService = new BlogService().repository
-let _UserService = new UserService().repository
+
 let _CommentService = new CommentService().repository
 
 export default class BlogController {
@@ -40,7 +40,7 @@ export default class BlogController {
 
     async getComments(req, res, next) {
         try {
-            let data = await _CommentService.find({ blogId: req.params.id }).populate("blogId", "body")
+            let data = await _CommentService.find({ blogId: req.params.id }).populate("author", 'name')
             return res.send(data)
         } catch (error) { next(error) }
     }

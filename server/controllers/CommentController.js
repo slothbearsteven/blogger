@@ -60,7 +60,10 @@ export default class CommentController {
 
   async delete(req, res, next) {
     try {
-      await _CommentService.findOneAndRemove({ _id: req.params.id })
+      let data = await _CommentService.findOneAndRemove({ _id: req.params.id })
+      if (!data) {
+        res.send("no, be NICE!")
+      }
       res.send("deleted comment")
     } catch (error) { next(error) }
 

@@ -12,10 +12,11 @@ export default class BlogController {
     constructor() {
         this.router = express.Router()
             //NOTE all routes after the authenticate method will require the user to be logged in to access
-            .use(Authorize.authenticated)
+
             .get('', this.getAll)
             .get('/:id', this.getById, this.getComments)
             .get('/:id/comments', this.getComments)
+            .use(Authorize.authenticated)
             .post('', this.create)
             .put('/:id', this.edit)
             .delete('/:id', this.delete)
@@ -42,7 +43,7 @@ export default class BlogController {
 
     async getComments(req, res, next) {
         try {
-            let data = await _CommentService.find({ blogId: req.params.id }).populate("author", 'name')
+            let data = await _CommentService.find({ blogId: req.params.id }).populate("author", "name")
 
             if (!data) {
                 throw new Error("Comments not found")
@@ -63,6 +64,9 @@ export default class BlogController {
     async edit(req, res, next) {
         try {
             let data = await _BlogService.findOneAndUpdate({ _id: req.params.id, authorId: req.session.uid }, req.body, { new: true })
+            if (!data) {
+                res.send("no, be NICE!")
+            }
             if (data) {
                 return res.send(data)
             }
@@ -74,7 +78,10 @@ export default class BlogController {
 
     async delete(req, res, next) {
         try {
-            await _BlogService.findOneAndRemove({ _id: req.params.id, authorId: req.session.uid })
+            let data = await _BlogService.findOneAndRemove({ _id: req.params.id, authorId: req.session.uid })
+            if (!data) {
+                res.send("no, be NICE!")
+            }
             res.send("deleted blog")
         } catch (error) { next(error) }
 
